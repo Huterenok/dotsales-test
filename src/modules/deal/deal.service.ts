@@ -15,17 +15,13 @@ export class DealService implements IDealService {
   async createDeal(dto: CreateDealDto): Promise<void> {
     const user = await this.crmService.queryUser(dto);
 
-    try {
-      let id;
-      if (user) {
-        id = await this.crmService.updateUser({ ...dto, id: user.id });
-      } else {
-        id = await this.crmService.createUser(dto);
-      }
-
-      await this.crmService.createDeal({ ...dto, id });
-    } catch (error) {
-      throw error;
+    let id;
+    if (user) {
+      id = await this.crmService.updateUser({ ...dto, id: user.id });
+    } else {
+      id = await this.crmService.createUser(dto);
     }
+
+    await this.crmService.createDeal({ ...dto, id });
   }
 }

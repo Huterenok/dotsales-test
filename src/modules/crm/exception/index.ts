@@ -4,29 +4,38 @@ import { CreateUserDto, QueryUserDto, UpdateUserDto } from '../dto';
 
 export class QueryUserError extends HttpException {
   constructor(data: QueryUserDto) {
-    super(`Cannot find user by ${data} data`, HttpStatus.NOT_FOUND);
+    super(
+      `Cannot find user by ${data.name} name, ${data.phone} phone, ${data.email} email`,
+      HttpStatus.BAD_REQUEST,
+    );
   }
 }
 
 export class CreateUserError extends HttpException {
   constructor(data: CreateUserDto) {
-    super(`Cannot create  user with ${data} data`, HttpStatus.BAD_REQUEST);
+    super(
+      `Cannot create user with ${data.name} name, ${data.phone} phone, ${data.email} email`,
+      HttpStatus.BAD_REQUEST,
+    );
   }
 }
 
 export class UpdateUserError extends HttpException {
   constructor(data: UpdateUserDto) {
-    super(`Cannot update  user with ${data} data`, HttpStatus.BAD_REQUEST);
+    super(
+      `Cannot update user with ${data.name} name, ${data.phone} phone, ${data.email} email`,
+      HttpStatus.BAD_REQUEST,
+    );
   }
 }
 export class CreateDealError extends HttpException {
-  constructor(response: string = 'Deal cannot be created') {
-    super(response, HttpStatus.BAD_REQUEST);
+  constructor() {
+    super('Deal cannot be created', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
 
 export class RefreshTokensError extends HttpException {
-  constructor(response: string = 'Error while authorization on crm') {
-    super(response, HttpStatus.INTERNAL_SERVER_ERROR);
+  constructor() {
+    super('Error while authorization on crm', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
