@@ -4,10 +4,10 @@ ENV NODE_ENV build
 
 WORKDIR /app
 
-COPY package*.json tsconfig.json ./
-RUN npm i
+COPY . .
+RUN npm install -g pnpm
 
-RUN npm run build 
+RUN pnpm run build 
 
 FROM node:20-alpine
 

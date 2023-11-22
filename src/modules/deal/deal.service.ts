@@ -13,17 +13,19 @@ export class DealService implements IDealService {
   constructor(private crmService: CrmService) {}
 
   async createDeal(dto: CreateDealDto): Promise<void> {
-    let id;
+    const user = await this.crmService.queryUser(dto);
 
     try {
-      const user = await this.crmService.queryUser(dto);
-      console.log('USER', user);
-      id = await this.crmService.updateUser(user);
-    } catch (err) {
-      console.log('err');
-      id = await this.crmService.createUser(dto);
-    }
+      let id;
+      if (user) {
+        id = await this.crmService.updateUser({ ...dto, id: user.id });
+      } else {
+        id = await this.crmService.createUser(dto);
+      }
 
-    await this.crmService.createDeal({ ...dto, id });
+      await this.crmService.createDeal({ ...dto, id });
+    } catch (error) {
+      throw error;
+    }
   }
 }

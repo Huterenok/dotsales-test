@@ -6,12 +6,6 @@ amoCRM:
 email - lebronkukich@gmail.com
 password - dotsales
 
-# Skill issues
-
-1. Couldn't resolve how to add additional contact info to deals.
-   In src/modules/crm/crm.service in createDeal method tried to use custom_fields_values,
-   but it didn't help
-
 # Deployment
 
 This project can be deployed in two ways

@@ -4,7 +4,7 @@ import { CreateUserDto, QueryUserDto, UpdateUserDto } from '../dto';
 
 export class QueryUserError extends HttpException {
   constructor(data: QueryUserDto) {
-    super(`Cannot find user by ${data} data`, HttpStatus.BAD_REQUEST);
+    super(`Cannot find user by ${data} data`, HttpStatus.NOT_FOUND);
   }
 }
 

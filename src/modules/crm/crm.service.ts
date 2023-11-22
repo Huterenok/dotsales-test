@@ -17,7 +17,6 @@ import {
 import {
   CreateDealError,
   CreateUserError,
-  QueryUserError,
   RefreshTokensError,
   UpdateUserError,
 } from './exception';
@@ -31,7 +30,7 @@ import {
 
 export interface ICrmService {
   createDeal(dto: User): Promise<void>;
-  queryUser(dto: QueryUserDto): Promise<User>;
+  queryUser(dto: QueryUserDto): Promise<User | null>;
   createUser(dto: QueryUserDto): Promise<number>;
   updateUser(dto: User): Promise<number>;
 }
@@ -55,50 +54,69 @@ export class CrmService implements ICrmService {
       {
         name: 'Good bargain',
         created_by: 0,
-        // custom_fields_values: [
-        //   {
-        //     field_id: Number(process.env.USER_EMAIL_FIELD_ID),
-        //     values: [
-        //       {
-        //         value: dto.email,
-        //       },
-        //     ],
-        //   },
-        //   {
-        //     field_id: Number(process.env.USER_PHONE_FIELD_ID),
-        //     values: [
-        //       {
-        //         value: dto.phone,
-        //       },
-        //     ],
-        //   },
-        // ],
+        custom_fields_values: [
+          {
+            field_id: Number(process.env.DEAL_EMAIL_FIELD_ID),
+            values: [
+              {
+                value: dto.email,
+              },
+            ],
+          },
+          {
+            field_id: Number(process.env.DEAL_NAME_FIELD_ID),
+            values: [
+              {
+                value: dto.name,
+              },
+            ],
+          },
+          {
+            field_id: Number(process.env.DEAL_PHONE_FIELD_ID),
+            values: [
+              {
+                value: dto.phone,
+              },
+            ],
+          },
+        ],
       },
     ];
     const res = await createDeal(body, this.accessToken);
 
     if (!res.ok) {
-      console.log(await res.text());
       throw new CreateDealError();
     }
   }
 
   // User service
   // In the future it can be separated to its own user crm serivce
-  async queryUser(dto: QueryUserDto): Promise<User> {
+  async queryUser(dto: QueryUserDto): Promise<User | null> {
     this.shouldRefresh();
 
-    const queryByPhone = await queryUser(dto.phone, this.accessToken);
-    const queryByEmail = await queryUser(dto.email, this.accessToken);
+    const res: QueryUserResponse | null = await Promise.allSettled([
+      queryUser(dto.phone, this.accessToken),
+      queryUser(dto.email, this.accessToken),
+    ]).then(async ([resultByPhone, resultByEmail]) => {
+      if (
+        resultByPhone.status === 'fulfilled' &&
+        resultByPhone.value.status === 200
+      ) {
+        return await resultByPhone.value.json();
+      } else if (
+        resultByEmail.status === 'fulfilled' &&
+        resultByEmail.value.status === 200
+      ) {
+        return await resultByEmail.value.json();
+      } else {
+        return null;
+      }
+    });
 
-    let res: QueryUserResponse;
-    if (queryByPhone.status == 200) {
-      res = await queryByPhone.json();
-    } else if (queryByPhone.status == 200) {
-      res = await queryByEmail.json();
-    } else {
-      throw new QueryUserError(dto);
+    if (!res) {
+      return null;
     }
+
     return {
       id: res._embedded.contacts[0].id,
       name: res._embedded.contacts[0].name,
@@ -115,7 +133,7 @@ export class CrmService implements ICrmService {
         name: dto.name,
         custom_fields_values: [
           {
-            field_id: Number(process.env.USER_EMAIL_FIELD_ID),
+            field_id: Number(process.env.USER_PHONE_FIELD_ID),
             values: [
               {
                 value: dto.phone,
@@ -123,7 +141,7 @@ export class CrmService implements ICrmService {
             ],
           },
           {
-            field_id: Number(process.env.USER_PHONE_FIELD_ID),
+            field_id: Number(process.env.USER_EMAIL_FIELD_ID),
             values: [
               {
                 value: dto.email,
@@ -171,12 +189,14 @@ export class CrmService implements ICrmService {
         ],
       },
     ];
+
     const res = await updateUser(body, this.accessToken);
     if (!res.ok) {
       throw new UpdateUserError(dto);
     }
 
     const data: UpdateUserResponse = await res.json();
+
     return data._embedded.contacts[0].id;
   }
 
